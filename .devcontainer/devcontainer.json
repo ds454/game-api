@@ -1,0 +1,20 @@
+{
+    "name": "game-api",
+    "image": "mcr.microsoft.com/devcontainers/java:25-bookworm",
+    "postAttachCommand": "${containerWorkspaceFolder}/.devcontainer/start.sh",
+    "features": {
+        "ghcr.io/devcontainers/features/java:1.8.3": {
+            "version": "25.0.4+1-ms",
+            "installMaven": "true",
+            "mavenVersion": "3.10.0"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "vscjava.vscode-java-pack@0.31.1",
+                "ms-azuretools.vscode-containers@2.5.2"
+            ]
+        }
+    }
+}
