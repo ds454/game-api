@@ -10,6 +10,7 @@
             "request": "launch",
             "mainClass": "ds454.locomotive.gameapi.Main",
             "projectName": "gameapi",
+            "preLaunchTask": "Transpile Protoc",
             "envFile": [
                 "${workspaceFolder}/local-dev/env/game-api/game-api.env"
             ]
