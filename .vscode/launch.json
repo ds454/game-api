@@ -11,7 +11,8 @@
             "mainClass": "ds454.locomotive.gameapi.Main",
             "preLaunchTask": "Transpile Protoc",
             "envFile": [
-                "${workspaceFolder}/local-dev/env/game-api/game-api.env"
+                "${workspaceFolder}/local-dev/env/game-api/game-api.env",
+                "${workspaceFolder}/local-dev/env/game-api/db.env",
             ]
         }
     ]
