@@ -3,11 +3,11 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>ds454.locomotive.steamservice</groupId>
-  <artifactId>steam-service</artifactId>
+  <groupId>ds454.locomotive.gameapi</groupId>
+  <artifactId>game-api</artifactId>
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
-  <name>steam-service</name>
+  <name>game-api</name>
   <url>http://maven.apache.org</url>
 
   <properties>
@@ -123,7 +123,7 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>ds454.locomotive.gameapi.Main</mainClass>
                 </transformer>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
               </transformers>
             </configuration>
           </execution>

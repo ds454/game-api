@@ -89,8 +89,7 @@ pipeline {
                   --local dockerfile=. \
                   --output type=image,name=${REGISTRY}/${REPOSITORY}:latest,push=true \
                   --output type=image,name=${REGISTRY}/${REPOSITORY}:${branch}-latest,push=true \
-                  --output type=image,name=${REGISTRY}/${REPOSITORY}:${hash},push=true \
-                  --output type=image,name=${REGISTRY}/${REPOSITORY}:${branch}-${hash},push=true
+                  --output type=image,name=${REGISTRY}/${REPOSITORY}:${hash},push=true
               """
             }
           }
