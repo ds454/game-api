@@ -17,6 +17,9 @@
     </encoder>
   </appender>
 
+  <logger name="io.grpc.netty.shaded" level="${GRPC_LOGLEVEL:-INFO}" />
+  <logger name="ds454.locomotive.steamservice" level="${STEAMSERVICE_LOGLEVEL:-DEBUG}" />
+
   <!-- Root Logger Configuration -->
   <root level="INFO">
     <appender-ref ref="CONSOLE" />
