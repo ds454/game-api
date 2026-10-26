@@ -28,7 +28,7 @@ import io.grpc.StatusRuntimeException;
 
 public class gameApiClient {
 
-    private static final Logger log = LoggerFactory.getLogger(gameApiClient.class)
+    private static final Logger log = LoggerFactory.getLogger(gameApiClient.class);
 
     //for requests with steamService
     private final SteamServiceGrpc.SteamServiceBlockingStub steamService;
@@ -85,7 +85,7 @@ public class gameApiClient {
         List<Integer> ownedGamesIds = new ArrayList<>(ownedGameResponse.getAppIds().getAppIdsList());
         
      
-
+        return null;
     }
 
 
