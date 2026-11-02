@@ -7,8 +7,8 @@
         "--name=game-api"
     ],
     "postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/start.sh",
-    "forwardPorts": [
-        8082
+    "appPort": [
+        "8082:50051"
     ],
     "features": {
         "ghcr.io/devcontainers/features/java:1.8.3": {
