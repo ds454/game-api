@@ -2,18 +2,29 @@ package ds454.locomotive.gameapi.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ds454.locomotive.gameapi.util.Result;
+import ds454.locomotive.generated.grpc.Problem;
+import ds454.locomotive.generated.grpc.ProblemType;
+import ds454.locomotive.generated.grpc.GameFromSteam;
+import ds454.locomotive.generated.grpc.GetGamesFromGameAppIdsRequest;
+import ds454.locomotive.generated.grpc.GetGamesFromGameAppIdsResponse;
 import ds454.locomotive.generated.grpc.GetOwnedGameAppIdsRequest;
 import ds454.locomotive.generated.grpc.GetOwnedGameAppIdsResponse;
 import ds454.locomotive.generated.grpc.Problem;
 import ds454.locomotive.generated.grpc.SteamServiceGrpc;
 
-//gRpc classes?
-// Yes.
+import ds454.locomotive.gameapi.repository.GameRepository;
+import ds454.locomotive.gameapi.repository.UserGameRepository;
+import ds454.locomotive.gameapi.util.Result;
+
+//gRpc classes
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -26,11 +37,13 @@ public class gameApiClient {
 
     //for requests with steamService
     private final SteamServiceGrpc.SteamServiceBlockingStub steamService;
+    private final GameRepository gameRepository;
+    private final UserGameRepository userGameRepository;
 
     private static gameApiClient instance;
 
-    public static void init(String host, int port){
-        gameApiClient.instance = new gameApiClient(host, port);
+    public static void init(String host, int port, GameRepository gameRepository, UserGameRepository userGameRepository ){
+        gameApiClient.instance = new gameApiClient(host, port, gameRepository, userGameRepository);
     }
 
     //is was gameapi initialized???
@@ -43,10 +56,11 @@ public class gameApiClient {
     }
 
     //connection with steamApi
-    private gameApiClient(String host, int port){
+    private gameApiClient(String host, int port, GameRepository gameRepository, UserGameRepository userGameRepository){
         ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-        //stub
         this.steamService = SteamServiceGrpc.newBlockingStub(channel);
+        this.gameRepository = gameRepository;
+        this.userGameRepository = userGameRepository;
     }
 
     /*
@@ -56,35 +70,78 @@ public class gameApiClient {
      * takes in steamId can be changed to uid instead if necessary
      */
 
+    public Result<List<Game>, Problem> getGames(UUID userId, String steamId){
 
-    //TODO: FINISH THIS BUT I HAVE QUESTIONS SO I STOPPED
-    public Result<List<Game>, Problem> getGames(String steamId){
-        //get the games from steam
-        GetOwnedGameAppIdsRequest ownedGamesRequest =
-            GetOwnedGameAppIdsRequest.newBuilder().setSteamId(steamId).build();
-        GetOwnedGameAppIdsResponse ownedGameResponse; 
+        GetOwnedGameAppIdsRequest request = GetOwnedGameAppIdsRequest.newBuilder().setSteamId(steamId).build();
+        GetOwnedGameAppIdsResponse response;
+
         try{
-            ownedGameResponse = steamService.getOwnedGameAppIds(ownedGamesRequest);
-            
+            response = steamService.getOwnedGameAppIds(request);
         }catch(StatusRuntimeException e){
-            log.error("Failed to pull games from steamApi", e);
-            return new Result.Failure<>(Problem.newBuilder().setMessage(e.getStatus().getDescription()).build());
+            log.error("Failed to get response from steam-service", e);
+            return new Result.Failure<>(
+                Problem.newBuilder().setMessage(e.getStatus().getDescription()).build());
         }
 
-        if(ownedGameResponse.hasProblem()){
-            return new Result.Failure<>(ownedGameResponse.getProblem());
+        if(response.hasProblem()){
+            return new Result.Failure<>(response.getProblem());
         }
 
-        //get the list
-        List<Integer> ownedGamesIds = new ArrayList<>(ownedGameResponse.getAppIds().getAppIdsList());
+        List<Long> appIds = response.getAppIds().getAppIdsList().stream().map(Integer::longValue).toList();
+
+        //the games that the user is already linked to
+        List<Game> userGames = userGameRepository.findByUserId(userId).stream().map(UserGame::getGame).collect(Collectors.toCollection(ArrayList::new));
+        Set<Long> linkedApps = userGames.stream().map(Game::getAppId).collect(Collectors.toSet());
+
+        //in steam but not link to the user
+        List<Long> unlinkedApps = appIds.stream().filter(id -> !linkedApps.contains(id)).toList();
+        if(unlinkedApps.isEmpty()){
+            return new Result.Success<>(userGames);
+        }
         
-     
-        return null;
+
+        //only link
+        List<Game> inDb = gameRepository.findByAppIdIn(unlinkedApps);
+        linkGames(userId, inDb);
+        userGames.addAll(inDb);
+
+        Set<Long> dbAppids = inDb.stream().map(Game::getAppId).collect(Collectors.toSet());
+
+        //not in the db
+        List<Long> toFetchAppList = unlinkedApps.stream().filter(id -> !dbAppids.contains(id)).toList();
+        if(toFetchAppList.isEmpty()){
+            return new Result.Success<>(userGames); 
+        }
+        
+        GetGamesFromGameAppIdsRequest gameRequest = GetGamesFromGameAppIdsRequest.newBuilder().addAllAppIds(toFetchAppList).build();
+        GetGamesFromGameAppIdsResponse gamesResponse;
+        try{
+            gamesResponse = steamService.getGamesFromGameAppIds(gameRequest);
+        }catch(StatusRuntimeException e){
+            log.error("Failed to get response from steam-service", e);
+            return new Result.Failure<>(
+                Problem.newBuilder().setMessage(e.getStatus().getDescription()).build());
+        }
+
+
+        List<Game> newGames = gamesResponse.getGamesList().stream().map(gameApiClient::toGame).toList();
+        List<Game> savedGames = gameRepository.saveAll(newGames);
+        linkGames(userId, savedGames);
+        userGames.addAll(savedGames);
+        
+        
+        return new Result.Success<>(userGames);
     }
 
+    private void linkGames(UUID userId, List<Game> games){
+        if(games.isEmpty()) return;
+        List<UserGame> links = games.stream().map(game-> new UserGame(userId, game)).toList();
+        userGameRepository.saveAll(links);
+    }
 
-
-
-    
+    private static Game toGame (GameFromSteam g){
+        return new Game(g.getAppId(), g.getName(), g.getDescription(), g.getReleaseYear());
+    }
 }
+
 

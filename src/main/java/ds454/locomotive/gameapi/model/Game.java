@@ -7,34 +7,35 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.Setter;
 
+@Getter
 @Entity
 @Table(name = "games")
 
 public class Game {
-    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     
+    //stream id for the game, unique so no duplicates
     @Column(nullable = false, unique = true)
     private long appId;
 
+    //will hold GameFromStream.name
     private String title;
-    
-    private String description;
 
-    //under assumption that the user is going to track the progress for said game
-    //so I can store as little games as possible
-    //private String progress; 
+    private int releaseYear;
+    
+    @Column(columnDefinition = "Text")
+    private String description;
 
     public Game(){}
 
-    public Game(long appId, String title, String description){
+    public Game(long appId, String title, String description, int releaseYear){
         this.title = title;
         this.appId = appId;
         this.description = description;
+        this.releaseYear = releaseYear;
     }
 }
 
