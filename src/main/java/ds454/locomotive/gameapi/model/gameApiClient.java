@@ -1,25 +1,19 @@
 package ds454.locomotive.gameapi.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ds454.locomotive.generated.grpc.Problem;
-import ds454.locomotive.generated.grpc.ProblemType;
-import ds454.locomotive.generated.grpc.GetGamesFromGameAppIdsRequest;
-import ds454.locomotive.generated.grpc.GetGamesFromGameAppIdsResponse;
+import ds454.locomotive.gameapi.util.Result;
 import ds454.locomotive.generated.grpc.GetOwnedGameAppIdsRequest;
 import ds454.locomotive.generated.grpc.GetOwnedGameAppIdsResponse;
+import ds454.locomotive.generated.grpc.Problem;
 import ds454.locomotive.generated.grpc.SteamServiceGrpc;
 
-import ds454.locomotive.gameapi.util.Result;
-
 //gRpc classes?
+// Yes.
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;

@@ -1,4 +1,4 @@
-package ds454.locomotive.gameapi.dbconnection;
+package ds454.locomotive.gameapi.spring;
 
 import jakarta.persistence.EntityManagerFactory;
 
