@@ -2,7 +2,6 @@ package ds454.locomotive.gameapi.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -10,14 +9,14 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ds454.locomotive.generated.grpc.Problem;
-import ds454.locomotive.generated.grpc.ProblemType;
 import ds454.locomotive.generated.grpc.GameFromSteam;
 import ds454.locomotive.generated.grpc.GetGamesFromGameAppIdsRequest;
 import ds454.locomotive.generated.grpc.GetGamesFromGameAppIdsResponse;
 import ds454.locomotive.generated.grpc.GetOwnedGameAppIdsRequest;
 import ds454.locomotive.generated.grpc.GetOwnedGameAppIdsResponse;
-import ds454.locomotive.generated.grpc.Problem;
+import ds454.locomotive.generated.grpc.problem.Problem;
+import ds454.locomotive.generated.grpc.problem.ProblemType;
+import ds454.locomotive.generated.grpc.problem.ProblemsList;
 import ds454.locomotive.generated.grpc.SteamServiceGrpc;
 
 import ds454.locomotive.gameapi.repository.GameRepository;
@@ -87,6 +86,8 @@ public class gameApiClient {
             return new Result.Failure<>(response.getProblem());
         }
 
+
+        //the ownedAppIds
         List<Long> appIds = response.getAppIds().getAppIdsList().stream().map(Integer::longValue).toList();
 
         //the games that the user is already linked to
@@ -135,7 +136,7 @@ public class gameApiClient {
 
     private void linkGames(UUID userId, List<Game> games){
         if(games.isEmpty()) return;
-        List<UserGame> links = games.stream().map(game-> new UserGame(userId, game)).toList();
+        List<UserGame> links = games.stream().map(game -> new UserGame(userId, game)).toList();
         userGameRepository.saveAll(links);
     }
 

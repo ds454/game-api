@@ -7,7 +7,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -18,7 +17,7 @@ import java.util.UUID;
 
 @Getter
 @Entity 
-@Table(name = "user_games",
+@Table(name = "user_achievements",
     uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "achievement_id"})
 )
 

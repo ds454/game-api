@@ -7,12 +7,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Table(name = "achievement",
@@ -37,7 +35,7 @@ public class Achievement {
     private String apiName;
 
     //name of the achievement
-    private String title;
+    private String displayName;
 
     //description
     @Column(columnDefinition = "Text")
@@ -46,8 +44,8 @@ public class Achievement {
 
     public Achievement(){}
 
-    public Achievement(Game game, String apiName, String title, String description){
-        this.title = title;
+    public Achievement(Game game, String apiName, String displayName, String description){
+        this.displayName = displayName;
         this.game = game;
         this.apiName = apiName;
         this.description = description;
