@@ -16,6 +16,7 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Getter
+@Setter
 @Entity 
 @Table(name = "user_achievements",
     uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "achievement_id"})
@@ -25,7 +26,7 @@ public class UserAchievement {
     @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private long id; //change the uuid
 
     @Column(name = "user_id", nullable = false)
     private UUID userId;

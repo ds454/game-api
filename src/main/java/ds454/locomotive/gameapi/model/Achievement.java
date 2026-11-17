@@ -11,9 +11,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
+import lombok.Setter;
 
+@Getter 
+@Setter
 @Entity
-@Table(name = "achievement",
+@Table(name = "achievements",
     uniqueConstraints = @UniqueConstraint(columnNames = {"game_id", "api_name"})
 )
 

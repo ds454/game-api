@@ -1,10 +1,16 @@
 package ds454.locomotive.gameapi;
 
 import ds454.locomotive.gameapi.grpc.HeaderInterceptor;
+import ds454.locomotive.gameapi.model.Achievement;
+import ds454.locomotive.gameapi.model.UserAchievement;
+import ds454.locomotive.gameapi.model.achievementApiClient;
 import ds454.locomotive.gameapi.model.gameApiClient;
 import ds454.locomotive.gameapi.repository.GameRepository;
+import ds454.locomotive.gameapi.repository.AchievementRepository;
+import ds454.locomotive.gameapi.repository.UserAchievementRepository;
 import ds454.locomotive.gameapi.repository.UserGameRepository;
 import ds454.locomotive.gameapi.service.GameGrpcService;
+import ds454.locomotive.gameapi.service.AchievementGrpcService;
 import ds454.locomotive.gameapi.spring.BeanProvider;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -27,9 +33,6 @@ public class Main {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("ds454.locomotive.gameapi");
         BeanProvider.setContext(context);
 
-
-       
-
         int grpcPort = Integer.parseInt(env("GRPC_PORT", "50051"));
         String steamHost = env("STEAM_SERVICE_HOST", "steam-service");
         int steamPort = Integer.parseInt(env("STEAM_SERVICE_PORT", "50051"));
@@ -38,11 +41,13 @@ public class Main {
 
         gameApiClient.init(steamHost, steamPort, context.getBean(GameRepository.class), 
         context.getBean(UserGameRepository.class));
+        achievementApiClient.init(steamHost, steamPort, context.getBean(GameRepository.class), context.getBean(AchievementRepository.class), context.getBean(UserAchievementRepository.class));
         Server s;
         s = ServerBuilder.forPort(grpcPort)
                 // This sends the request to the HeaderInterceptor, which gets the user's UUID and
                 // steamid from the request.
-                .addService(ServerInterceptors.intercept(new GameGrpcService(), new HeaderInterceptor()))
+                .addService(ServerInterceptors.intercept(new GameGrpcService().bindService(), new HeaderInterceptor()))
+                .addService(ServerInterceptors.intercept(new AchievementGrpcService().bindService(), new HeaderInterceptor()))
                 .build()
                 .start();
         log.info("gRPC server started.");

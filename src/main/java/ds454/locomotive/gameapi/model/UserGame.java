@@ -12,10 +12,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
+import lombok.Setter;
 
 //goal is to say something along the lines of this user has these games 
 
 @Getter
+@Setter
 @Entity 
 @Table(name = "user_games",
     uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "game_id"})
