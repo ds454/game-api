@@ -110,7 +110,7 @@ public class achievementApiClient {
 
         //problem?
         if(response.hasProblem()){
-            log.warn("Stream problem for user achievements", response.getProblem());
+            log.warn("Stream problem for user achievements {}", response.getProblem());
             return new Result.Failure<>(response.getProblem());
 
         }
@@ -133,23 +133,19 @@ public class achievementApiClient {
         for( UserAchievementForGameAppId bySteam : response.getAchievements().getAchievmentList()){
 
             // TODO: Update the following logic
-            GameAchievement details = bySteam.getAchievement();
-            Achievement achievement = byName.get(details.getName());
+            Achievement achievement = byName.get(bySteam.getAchievementName());
             //not in the commonplace
             if(achievement == null) continue; 
 
             UserAchievement row = existing.get(achievement.getId());
             if(row == null){
+                //first time user of achievement
                 row = new UserAchievement(userId, achievement);
             }
 
-            row.setCompleted(bySteam.getStatus());
+            row.setCompleted(bySteam.getCompleted());
 
-            if(details.hasTimeCompleted()){
-                row.setTimeCompleted(details.getTimeCompleted());
-            }else{
-                row.setTimeCompleted(null);
-            }
+            row.setTimeCompleted(bySteam.getTimeCompleted() == 0 ? null : bySteam.getTimeCompleted());
 
             toStore.add(row);
 
@@ -173,7 +169,7 @@ public class achievementApiClient {
 
         //problem occurs
         if(response.hasProblem()){
-            log.warn("steam problem with app", game.getAppId(), response.getProblem());
+            log.warn("steam problem with app {} , {}", game.getAppId(), response.getProblem());
             return new Result.Failure<>(response.getProblem());
 
         }
@@ -184,15 +180,6 @@ public class achievementApiClient {
         .map(achieve -> new Achievement(game, achieve.getAchievementName(), achieve.getAchievementDisplayName(), achieve.getDescription())).toList();
         return new Result.Success<>(achievementRepository.saveAll(toStore));
         
-    }
-
-    //proto return a list so give just the first
-    private static Problem theProblem(ProblemsList list){
-        if(list.getProblemsCount() > 0){
-            return list.getProblems(0);
-        }
-        //just in case
-        return serverError(null);
     }
 
     //manage the errors
