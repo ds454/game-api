@@ -4,40 +4,27 @@ import ds454.locomotive.gameapi.repository.AchievementRepository;
 import ds454.locomotive.gameapi.repository.UserAchievementRepository;
 import ds454.locomotive.gameapi.repository.GameRepository;
 import ds454.locomotive.generated.grpc.SteamServiceGrpc;
-import ds454.locomotive.generated.grpc.UserAcheivements;
 import ds454.locomotive.generated.grpc.UserAchievementForGameAppId;
-import ds454.locomotive.generated.grpc.UserGameAcheivement;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import ds454.locomotive.gameapi.util.Result;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 import ds454.locomotive.generated.grpc.problem.Problem;
 import ds454.locomotive.generated.grpc.problem.ProblemType;
-import ds454.locomotive.generated.grpc.problem.ProblemsList;
 import io.grpc.StatusRuntimeException;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.StatusRuntimeException;
-import ds454.locomotive.generated.grpc.AcheivementsGrpc;
-import ds454.locomotive.generated.grpc.AchievementFromSteam;
-import ds454.locomotive.generated.grpc.GameAchievement;
-import ds454.locomotive.generated.grpc.GetAchievementsForGameAppId;
 import ds454.locomotive.generated.grpc.GetAchievementsForGameAppIdRequest;
 import ds454.locomotive.generated.grpc.GetAchievementsForGameAppIdResponse;
-import ds454.locomotive.generated.grpc.GetAllGameAcheivementsRequest;
-import ds454.locomotive.generated.grpc.GetAllGameAcheivementsResponse;
 import ds454.locomotive.generated.grpc.GetUserAchievementsForGameAppIdRequest;
 import ds454.locomotive.generated.grpc.GetUserAchievementsForGameAppIdResponse;
-import ds454.locomotive.generated.grpc.GetUserGameAcheivementsRequest;
-import ds454.locomotive.generated.grpc.GetUserGameAcheivementsResponse;
+
 
 
 public class achievementApiClient {
@@ -150,8 +137,15 @@ public class achievementApiClient {
             toStore.add(row);
 
         }
+        userAchievementRepository.saveAll(toStore);
+
+        List<UserAchievement> saved =
+            userAchievementRepository.findByUserIdAndAchievementGameId(
+                userId, game.getId()
+            );
+
+        return new Result.Success<List<UserAchievement>, Problem>(saved);
         
-        return new Result.Success<List<UserAchievement>,Problem>(userAchievementRepository.saveAll(toStore));
     }
 
     //gets the game achievements from steam and put them in the database
@@ -190,5 +184,17 @@ public class achievementApiClient {
         }
         return built.build();
     }
+
+    public List<UserAchievement> getAchievementsByUserIdGameId(UUID userId, long appId){
+        Optional<Game> found = gameRepository.findByAppId(appId);
+        if (found.isEmpty()){
+            return new ArrayList<>();
+        }
+
+        Game game = found.get();
+        
+        return userAchievementRepository.findByUserIdAndAchievementGameId(userId, game.getId());
+    }
+
     
 }

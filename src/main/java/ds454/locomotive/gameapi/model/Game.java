@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -17,7 +18,7 @@ import lombok.Setter;
 public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;  //change to UUID type
+    private long id;  
     
     //stream id for the game, unique so no duplicates
     @Column(nullable = false, unique = true)

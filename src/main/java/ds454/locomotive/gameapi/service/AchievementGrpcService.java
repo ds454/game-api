@@ -4,15 +4,11 @@ import java.util.List;
 import java.util.UUID;
 
 import ds454.locomotive.gameapi.grpc.HeaderInterceptor;
-import ds454.locomotive.gameapi.model.Achievement;
 import ds454.locomotive.gameapi.model.UserAchievement;
 import ds454.locomotive.gameapi.model.achievementApiClient;
-import ds454.locomotive.generated.grpc.GameList;
-import ds454.locomotive.generated.grpc.GameServiceGrpc;
 import ds454.locomotive.generated.grpc.GetAchievementsRequest;
 import ds454.locomotive.generated.grpc.GetAchievementsResponse;
-import ds454.locomotive.generated.grpc.GetUserGameAcheivementsRequest;
-import ds454.locomotive.generated.grpc.GetUserGameAcheivementsResponse;
+import ds454.locomotive.generated.grpc.GetAchievementsByUserIdGameIdRequest;
 import ds454.locomotive.generated.grpc.UserGameAcheivement;
 import ds454.locomotive.generated.grpc.UserGameAcheivementList;
 import ds454.locomotive.generated.grpc.AchievementsServiceGrpc;
@@ -65,9 +61,50 @@ public class AchievementGrpcService extends AchievementsServiceGrpc.Achievements
             out.onCompleted();
 
         }catch (Exception e){
-            log.error("getAchievements FAILED", 0);
+            log.error("getAchievements FAILED", e);
             out.onError(Status.INTERNAL.withDescription(String.valueOf(e.getMessage())).asRuntimeException());
         }
+    }
+
+
+    @Override 
+    public void getAchievementsByUserIdGameId(GetAchievementsByUserIdGameIdRequest request, StreamObserver<GetAchievementsResponse> out){
+        try{
+
+            String input = request.getUserId().isBlank() ? HeaderInterceptor.UserUuid.get() : request.getUserId();
+            long appId = request.getAppId();
+            UUID userId;
+            try{
+               userId = UUID.fromString(input);
+            }catch(IllegalArgumentException e){
+                out.onError(Status.UNAUTHENTICATED.withDescription("bad users id").asRuntimeException());
+                return;
+            }
+            UserGameAcheivementList.Builder list = UserGameAcheivementList.newBuilder();
+                for (UserAchievement a : achievementApiClient.get().getAchievementsByUserIdGameId(userId, request.getAppId())){
+                    var achieve = a.getAchievement();
+                    GameAchievement.Builder information = GameAchievement.newBuilder()
+                        .setName(achieve.getApiName())
+                        .setDisplayName(achieve.getDisplayName() == null ? "" : achieve.getDisplayName())
+                        .setDescription(achieve.getDescription() == null ? "" : achieve.getDescription())
+                        .setIsCompleted(a.isCompleted());
+                    if(a.getTimeCompleted() != null){
+                        information.setTimeCompleted(a.getTimeCompleted());
+                    }
+                    list.addAcheivements(UserGameAcheivement.newBuilder()
+                        .setAchievement(information)
+                        .setStatus(a.isCompleted())
+                        .build()); 
+                } 
+
+            out.onNext(GetAchievementsResponse.newBuilder().setAchievements(list).build());
+            out.onCompleted();
+
+        }catch (Exception e){
+            log.error("getAchievementsByUserIdGameId Failed :(", 0 );
+            out.onError(Status.INTERNAL.withDescription(String.valueOf(e.getMessage())).asRuntimeException());
+        }
+
     }
 
 

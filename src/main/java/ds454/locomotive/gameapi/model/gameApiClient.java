@@ -134,6 +134,10 @@ public class gameApiClient {
         return new Result.Success<>(userGames);
     }
 
+    public List<Game> getGamesByUserId(UUID userId){
+        return userGameRepository.getGamesByUserId(userId);
+    }
+
     private void linkGames(UUID userId, List<Game> games){
         if(games.isEmpty()) return;
         List<UserGame> links = games.stream().map(game -> new UserGame(userId, game)).toList();

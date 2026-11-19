@@ -17,6 +17,7 @@ import ds454.locomotive.generated.grpc.GetGamesResponse;
 import ds454.locomotive.generated.grpc.problem.Problem;
 import ds454.locomotive.generated.grpc.problem.ProblemType;
 import ds454.locomotive.generated.grpc.problem.ProblemsList;
+import ds454.locomotive.generated.grpc.GetGamesByUserIdRequest;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
@@ -67,6 +68,33 @@ public class GameGrpcService extends GameServiceGrpc.GameServiceImplBase {
             .setDescription(g.getDescription() == null ? "" : g.getDescription())
             .setReleaseYear(g.getReleaseYear())
             .build();
+    }
+
+    @Override 
+    public void getGamesByUserId(GetGamesByUserIdRequest request, StreamObserver<GetGamesResponse> out){
+        try{
+            //going to need to check if given a userId bc probably going to use this for getCommonGames
+            String input = request.getUserId().isBlank() ? HeaderInterceptor.UserUuid.get() : request.getUserId();
+            UUID userId;
+            try{
+               userId = UUID.fromString(input);
+            }catch(IllegalArgumentException e){
+                out.onError(Status.UNAUTHENTICATED.withDescription("bad users id").asRuntimeException());
+                return;
+            }
+            GameList.Builder list = GameList.newBuilder();
+            for (Game game : gameApiClient.get().getGamesByUserId(userId)){
+                list.addGames(toProto(game));
+            }
+
+            out.onNext(GetGamesResponse.newBuilder().setGames(list).build());
+            out.onCompleted();
+
+        }catch (Exception e){
+            log.error("getGamesByUserId Failed :(", 0 );
+            out.onError(Status.INTERNAL.withDescription(String.valueOf(e.getMessage())).asRuntimeException());
+        }
+
     }
     
 }
