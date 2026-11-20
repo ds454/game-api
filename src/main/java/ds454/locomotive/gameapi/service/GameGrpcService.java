@@ -4,7 +4,9 @@ import java.util.UUID;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import java.util.Set;
 
+import java.util.HashSet;
 import java.util.List;
 import ds454.locomotive.gameapi.grpc.HeaderInterceptor;
 import ds454.locomotive.gameapi.model.Game;
@@ -13,6 +15,7 @@ import ds454.locomotive.gameapi.model.gameApiClient;
 import ds454.locomotive.generated.grpc.GameList;
 import ds454.locomotive.generated.grpc.GameServiceGrpc;
 import ds454.locomotive.generated.grpc.GetGamesRequest;
+import ds454.locomotive.generated.grpc.GetCommonGamesRequest;
 import ds454.locomotive.generated.grpc.GetGamesResponse;
 import ds454.locomotive.generated.grpc.problem.Problem;
 import ds454.locomotive.generated.grpc.problem.ProblemType;
@@ -95,6 +98,30 @@ public class GameGrpcService extends GameServiceGrpc.GameServiceImplBase {
             out.onError(Status.INTERNAL.withDescription(String.valueOf(e.getMessage())).asRuntimeException());
         }
 
+    }
+
+    @Override
+    public void getCommonGames(GetCommonGamesRequest request, StreamObserver<GetGamesResponse> out){
+        try{
+            Set<UUID> ids = new HashSet<>();
+            for(String input : request.getUserIdsList()){
+                try{
+                    ids.add(UUID.fromString(input));
+                }catch (IllegalArgumentException e){
+                    out.onError(Status.INVALID_ARGUMENT.withDescription("invalid user id").asRuntimeException());
+                }
+            }
+            GameList.Builder list = GameList.newBuilder();
+            for (Game game : gameApiClient.get().getCommonGames(ids)){
+                list.addGames(toProto(game));
+            }
+            out.onNext(GetGamesResponse.newBuilder().setGames(list).build());
+            out.onCompleted();
+
+        }catch(Exception e){
+            log.error("getCommonGames failed :(", e);
+            out.onError(Status.INTERNAL.withDescription(String.valueOf(e.getMessage())).asRuntimeException());
+        }
     }
     
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ds454.locomotive.gameapi.model.Game;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,4 +18,11 @@ public interface UserGameRepository extends JpaRepository<UserGame, Long> {
 
     @Query ("select ug.game from UserGame ug where ug.userId = :userId")
     List<Game> getGamesByUserId(@Param("userId") UUID userId);
+    @Query ("select g from Game g where g.id in (" + 
+            "select ug.game.id from UserGame ug " + 
+            "where ug.userId in :userIds " +
+            "group by ug.game.id " +
+            "having count(distinct ug.userId) = :userCount)")
+    List<Game> findCommonGames( @Param("userIds") Collection<UUID> userIds,
+                                @Param("userCount") long userCount);
 }

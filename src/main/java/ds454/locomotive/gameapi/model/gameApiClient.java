@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +20,11 @@ import ds454.locomotive.generated.grpc.problem.Problem;
 import ds454.locomotive.generated.grpc.problem.ProblemType;
 import ds454.locomotive.generated.grpc.problem.ProblemsList;
 import ds454.locomotive.generated.grpc.SteamServiceGrpc;
-
+import ds454.locomotive.generated.grpc.User;
 import ds454.locomotive.gameapi.repository.GameRepository;
 import ds454.locomotive.gameapi.repository.UserGameRepository;
 import ds454.locomotive.gameapi.util.Result;
+import java.util.HashSet;
 
 //gRpc classes
 import io.grpc.ManagedChannel;
@@ -138,6 +141,13 @@ public class gameApiClient {
         return userGameRepository.getGamesByUserId(userId);
     }
 
+    public List<Game> getCommonGames(Set<UUID> userIds){
+        if(userIds == null || userIds.isEmpty()){
+            return List.of();
+        }
+        return userGameRepository.findCommonGames(userIds, userIds.size());
+    }
+    
     private void linkGames(UUID userId, List<Game> games){
         if(games.isEmpty()) return;
         List<UserGame> links = games.stream().map(game -> new UserGame(userId, game)).toList();
