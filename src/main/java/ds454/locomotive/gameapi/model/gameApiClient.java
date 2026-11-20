@@ -22,6 +22,7 @@ import ds454.locomotive.generated.grpc.problem.ProblemsList;
 import ds454.locomotive.generated.grpc.SteamServiceGrpc;
 import ds454.locomotive.generated.grpc.User;
 import ds454.locomotive.gameapi.repository.GameRepository;
+import ds454.locomotive.gameapi.repository.UserAchievementRepository;
 import ds454.locomotive.gameapi.repository.UserGameRepository;
 import ds454.locomotive.gameapi.util.Result;
 import java.util.HashSet;
@@ -41,11 +42,12 @@ public class gameApiClient {
     private final SteamServiceGrpc.SteamServiceBlockingStub steamService;
     private final GameRepository gameRepository;
     private final UserGameRepository userGameRepository;
+    private final UserAchievementRepository userAchievementRepository;
 
     private static gameApiClient instance;
 
-    public static void init(String host, int port, GameRepository gameRepository, UserGameRepository userGameRepository ){
-        gameApiClient.instance = new gameApiClient(host, port, gameRepository, userGameRepository);
+    public static void init(String host, int port, GameRepository gameRepository, UserGameRepository userGameRepository, UserAchievementRepository userAchievementRepository ){
+        gameApiClient.instance = new gameApiClient(host, port, gameRepository, userGameRepository, userAchievementRepository);
     }
 
     //is was gameapi initialized???
@@ -58,11 +60,12 @@ public class gameApiClient {
     }
 
     //connection with steamApi
-    private gameApiClient(String host, int port, GameRepository gameRepository, UserGameRepository userGameRepository){
+    private gameApiClient(String host, int port, GameRepository gameRepository, UserGameRepository userGameRepository, UserAchievementRepository userAchievementRepository ){
         ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.steamService = SteamServiceGrpc.newBlockingStub(channel);
         this.gameRepository = gameRepository;
         this.userGameRepository = userGameRepository;
+        this.userAchievementRepository = userAchievementRepository;
     }
 
     /*
@@ -141,6 +144,7 @@ public class gameApiClient {
         return userGameRepository.getGamesByUserId(userId);
     }
 
+    //gets the common games between a set of userIds
     public List<Game> getCommonGames(Set<UUID> userIds){
         if(userIds == null || userIds.isEmpty()){
             return List.of();
@@ -156,6 +160,21 @@ public class gameApiClient {
 
     private static Game toGame (GameFromSteam g){
         return new Game(g.getAppId(), g.getName(), g.getDescription(), g.getReleaseYear());
+    }
+
+    //to delete user data once a user has been deleted
+    public Result<Boolean, Problem> deleteUserData(UUID userId){
+        try{
+            userGameRepository.deleteAllByUserId(userId);
+            userAchievementRepository.deleteAllByUserId(userId);
+            return new Result.Success<>(true);
+        }catch (Exception e){
+            log.error("Failed to delete user data {}", userId, e);
+            return new Result.Failure<>(
+                Problem.newBuilder().setMessage(e.getMessage()).build());
+
+        }
+        
     }
 }
 

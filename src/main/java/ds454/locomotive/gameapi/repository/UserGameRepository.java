@@ -2,6 +2,7 @@ package ds454.locomotive.gameapi.repository;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ds454.locomotive.gameapi.model.Game;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 import ds454.locomotive.gameapi.model.UserGame;
+import jakarta.transaction.Transactional;
 
 public interface UserGameRepository extends JpaRepository<UserGame, Long> {
     @EntityGraph (attributePaths = "game")
@@ -25,4 +27,8 @@ public interface UserGameRepository extends JpaRepository<UserGame, Long> {
             "having count(distinct ug.userId) = :userCount)")
     List<Game> findCommonGames( @Param("userIds") Collection<UUID> userIds,
                                 @Param("userCount") long userCount);
+    @Transactional 
+    @Modifying 
+    @Query("delete from UserGame ug where ug.userId = :userId")
+    int deleteAllByUserId(@Param("userId") UUID userId);
 }

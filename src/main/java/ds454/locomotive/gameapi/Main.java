@@ -1,8 +1,6 @@
 package ds454.locomotive.gameapi;
 
 import ds454.locomotive.gameapi.grpc.HeaderInterceptor;
-import ds454.locomotive.gameapi.model.Achievement;
-import ds454.locomotive.gameapi.model.UserAchievement;
 import ds454.locomotive.gameapi.model.achievementApiClient;
 import ds454.locomotive.gameapi.model.gameApiClient;
 import ds454.locomotive.gameapi.repository.GameRepository;
@@ -11,6 +9,7 @@ import ds454.locomotive.gameapi.repository.UserAchievementRepository;
 import ds454.locomotive.gameapi.repository.UserGameRepository;
 import ds454.locomotive.gameapi.service.GameGrpcService;
 import ds454.locomotive.gameapi.service.AchievementGrpcService;
+import ds454.locomotive.gameapi.service.UserDataGrpcService;
 import ds454.locomotive.gameapi.spring.BeanProvider;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -40,7 +39,9 @@ public class Main {
         log.info("Starting gRPC server on port " + grpcPort);
 
         gameApiClient.init(steamHost, steamPort, context.getBean(GameRepository.class), 
-        context.getBean(UserGameRepository.class));
+        context.getBean(UserGameRepository.class),
+        context.getBean(UserAchievementRepository.class));
+
         achievementApiClient.init(steamHost, steamPort, context.getBean(GameRepository.class), context.getBean(AchievementRepository.class), context.getBean(UserAchievementRepository.class));
         Server s;
         s = ServerBuilder.forPort(grpcPort)
@@ -48,6 +49,7 @@ public class Main {
                 // steamid from the request.
                 .addService(ServerInterceptors.intercept(new GameGrpcService().bindService(), new HeaderInterceptor()))
                 .addService(ServerInterceptors.intercept(new AchievementGrpcService().bindService(), new HeaderInterceptor()))
+                .addService(new UserDataGrpcService())
                 .build()
                 .start();
         log.info("gRPC server started.");
